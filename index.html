@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UK Sovereign Dashboards</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 2rem;
+        line-height: 1.5;
+        color: #1f2937;
+      }
+      pre {
+        background: #f3f4f6;
+        padding: 1rem;
+        overflow-x: auto;
+        border-radius: 0.5rem;
+      }
+      .card {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        margin-top: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>UK Sovereign Dashboards</h1>
+    <p>This page loads your JSON file and displays it in the browser.</p>
+    <div id="status" class="card">Loading data...</div>
+    <div id="output" class="card"></div>
+
+    <script>
+      const candidates = [
+        './whitehall_sandbox_strategic_data.json',
+        './data.json',
+        './public/whitehall_sandbox_strategic_data.json',
+        './public/data.json'
+      ];
+
+      async function loadData() {
+        const status = document.getElementById('status');
+        const output = document.getElementById('output');
+
+        for (const path of candidates) {
+          try {
+            const response = await fetch(path);
+            if (!response.ok) continue;
+            const data = await response.json();
+            status.textContent = `Loaded from ${path}`;
+            output.innerHTML = renderData(data);
+            return;
+          } catch (error) {
+            // Try the next candidate.
+          }
+        }
+
+        status.textContent = 'No JSON file was found yet.';
+        output.innerHTML = `
+          <p>Place your JSON file in the project root as <strong>whitehall_sandbox_strategic_data.json</strong>
+          or in the <strong>public</strong> folder and refresh this page.</p>
+        `;
+      }
+
+      function renderData(data) {
+        if (Array.isArray(data)) {
+          return `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        if (data && typeof data === 'object') {
+          return `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        return `<pre>${String(data)}</pre>`;
+      }
+
+      loadData();
+    </script>
+  </body>
+</html>
