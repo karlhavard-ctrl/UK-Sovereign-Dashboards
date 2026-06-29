@@ -59,6 +59,23 @@
       <div id="notes" class="card"></div>
     </div>
 
+    <script id="dashboard-data" type="application/json">
+      {
+        "title": "UK Sovereign Dashboards",
+        "updated": "2026-06-29",
+        "theme": "Sovereignty and resilience",
+        "metrics": [
+          { "name": "Energy security", "value": 78, "unit": "%" },
+          { "name": "Food resilience", "value": 64, "unit": "%" },
+          { "name": "Digital independence", "value": 81, "unit": "%" }
+        ],
+        "notes": [
+          "This dashboard is now hosted on Vercel.",
+          "Replace the sample data with your real JSON export when ready."
+        ]
+      }
+    </script>
+
     <script>
       const candidates = [
         './whitehall_sandbox_strategic_data.json',
@@ -67,6 +84,30 @@
         './public/data.json'
       ];
 
+      function renderDashboard(data, elements) {
+        const { status, metrics, notes, title, subtitle } = elements;
+
+        title.textContent = data.title || 'UK Sovereign Dashboards';
+        subtitle.textContent = `${data.theme || 'Dashboard'} • Updated ${data.updated || 'n/a'}`;
+        status.textContent = 'Dashboard ready';
+
+        metrics.innerHTML = '';
+        if (Array.isArray(data.metrics)) {
+          data.metrics.forEach((item) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<strong>${item.name || 'Metric'}</strong><div class="metric">${item.value ?? '--'}${item.unit || ''}</div>`;
+            metrics.appendChild(card);
+          });
+        }
+
+        if (Array.isArray(data.notes) && data.notes.length) {
+          notes.innerHTML = `<strong>Notes</strong><ul class="notes">${data.notes.map((note) => `<li>${note}</li>`).join('')}</ul>`;
+        } else {
+          notes.innerHTML = '<strong>No notes available.</strong>';
+        }
+      }
+
       async function loadData() {
         const status = document.getElementById('status');
         const metrics = document.getElementById('metrics');
@@ -74,31 +115,21 @@
         const title = document.getElementById('title');
         const subtitle = document.getElementById('subtitle');
 
+        try {
+          const inlineRaw = document.getElementById('dashboard-data').textContent;
+          const inlineData = JSON.parse(inlineRaw);
+          renderDashboard(inlineData, { status, metrics, notes, title, subtitle });
+          return;
+        } catch (error) {
+          // Fall back to loading the JSON file if present.
+        }
+
         for (const path of candidates) {
           try {
             const response = await fetch(path);
             if (!response.ok) continue;
             const data = await response.json();
-
-            title.textContent = data.title || 'UK Sovereign Dashboards';
-            subtitle.textContent = `${data.theme || 'Dashboard'} • Updated ${data.updated || 'n/a'}`;
-            status.textContent = `Loaded from ${path}`;
-
-            metrics.innerHTML = '';
-            if (Array.isArray(data.metrics)) {
-              data.metrics.forEach((item) => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `<strong>${item.name || 'Metric'}</strong><div class="metric">${item.value ?? '--'}${item.unit || ''}</div>`;
-                metrics.appendChild(card);
-              });
-            }
-
-            if (Array.isArray(data.notes) && data.notes.length) {
-              notes.innerHTML = `<strong>Notes</strong><ul class="notes">${data.notes.map((note) => `<li>${note}</li>`).join('')}</ul>`;
-            } else {
-              notes.innerHTML = '<strong>No notes available.</strong>';
-            }
+            renderDashboard(data, { status, metrics, notes, title, subtitle });
             return;
           } catch (error) {
             // Try the next candidate.
