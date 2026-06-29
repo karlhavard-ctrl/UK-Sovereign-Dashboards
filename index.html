@@ -7,29 +7,57 @@
     <style>
       body {
         font-family: Arial, sans-serif;
-        margin: 2rem;
+        margin: 0;
+        padding: 2rem;
         line-height: 1.5;
         color: #1f2937;
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
       }
-      pre {
-        background: #f3f4f6;
-        padding: 1rem;
-        overflow-x: auto;
-        border-radius: 0.5rem;
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .hero {
+        background: #0f172a;
+        color: white;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        margin-bottom: 1rem;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
       }
       .card {
-        border: 1px solid #e5e7eb;
+        background: white;
+        border: 1px solid #e2e8f0;
         border-radius: 0.75rem;
         padding: 1rem 1.25rem;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+      }
+      .metric {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-top: 0.25rem;
+      }
+      .notes {
         margin-top: 1rem;
+        padding-left: 1rem;
       }
     </style>
   </head>
   <body>
-    <h1>UK Sovereign Dashboards</h1>
-    <p>This page loads your JSON file and displays it in the browser.</p>
-    <div id="status" class="card">Loading data...</div>
-    <div id="output" class="card"></div>
+    <div class="container">
+      <div class="hero">
+        <h1 id="title">UK Sovereign Dashboards</h1>
+        <p id="subtitle">Loading your JSON data...</p>
+      </div>
+
+      <div id="status" class="card">Loading data...</div>
+      <div id="metrics" class="grid"></div>
+      <div id="notes" class="card"></div>
+    </div>
 
     <script>
       const candidates = [
@@ -41,15 +69,36 @@
 
       async function loadData() {
         const status = document.getElementById('status');
-        const output = document.getElementById('output');
+        const metrics = document.getElementById('metrics');
+        const notes = document.getElementById('notes');
+        const title = document.getElementById('title');
+        const subtitle = document.getElementById('subtitle');
 
         for (const path of candidates) {
           try {
             const response = await fetch(path);
             if (!response.ok) continue;
             const data = await response.json();
+
+            title.textContent = data.title || 'UK Sovereign Dashboards';
+            subtitle.textContent = `${data.theme || 'Dashboard'} • Updated ${data.updated || 'n/a'}`;
             status.textContent = `Loaded from ${path}`;
-            output.innerHTML = renderData(data);
+
+            metrics.innerHTML = '';
+            if (Array.isArray(data.metrics)) {
+              data.metrics.forEach((item) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<strong>${item.name || 'Metric'}</strong><div class="metric">${item.value ?? '--'}${item.unit || ''}</div>`;
+                metrics.appendChild(card);
+              });
+            }
+
+            if (Array.isArray(data.notes) && data.notes.length) {
+              notes.innerHTML = `<strong>Notes</strong><ul class="notes">${data.notes.map((note) => `<li>${note}</li>`).join('')}</ul>`;
+            } else {
+              notes.innerHTML = '<strong>No notes available.</strong>';
+            }
             return;
           } catch (error) {
             // Try the next candidate.
@@ -57,22 +106,8 @@
         }
 
         status.textContent = 'No JSON file was found yet.';
-        output.innerHTML = `
-          <p>Place your JSON file in the project root as <strong>whitehall_sandbox_strategic_data.json</strong>
-          or in the <strong>public</strong> folder and refresh this page.</p>
-        `;
-      }
-
-      function renderData(data) {
-        if (Array.isArray(data)) {
-          return `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-        }
-
-        if (data && typeof data === 'object') {
-          return `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-        }
-
-        return `<pre>${String(data)}</pre>`;
+        metrics.innerHTML = '';
+        notes.innerHTML = '<strong>Place your JSON file in the project root as whitehall_sandbox_strategic_data.json and refresh this page.</strong>';
       }
 
       loadData();
