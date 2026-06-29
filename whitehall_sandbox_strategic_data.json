@@ -1,1 +1,26 @@
-{}
+{
+  "title": "UK Sovereign Dashboards",
+  "updated": "2026-06-29",
+  "theme": "Sovereignty and resilience",
+  "metrics": [
+    {
+      "name": "Energy security",
+      "value": 78,
+      "unit": "%"
+    },
+    {
+      "name": "Food resilience",
+      "value": 64,
+      "unit": "%"
+    },
+    {
+      "name": "Digital independence",
+      "value": 81,
+      "unit": "%"
+    }
+  ],
+  "notes": [
+    "This is a sample dataset for the dashboard.",
+    "Replace it with your real JSON data if you have a full export."
+  ]
+}
