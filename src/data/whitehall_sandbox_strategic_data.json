@@ -1,0 +1,123 @@
+{
+  "title": "The Sovereign Path",
+  "subtitle": "UK AI Futures 2026-2031",
+  "insights": [
+    {
+      "title": "The Compute Disparity",
+      "fact": "Europe hosts just 5% of global frontier AI compute.",
+      "detail": "This creates a structural strategic weakness against US hyperscalers."
+    },
+    {
+      "title": "The Capital Density Problem",
+      "fact": "Startups struggle against the scale of Silicon Valley capital.",
+      "detail": "The UK needs stronger anchor demand and state-backed procurement."
+    }
+  ],
+  "researchSources": [
+    {
+      "source": "Europe 2031 Scenario Report",
+      "authority": "MIT Research Group",
+      "insights": [
+        {
+          "point": "Compute chokepoint",
+          "detail": "Compute concentration creates strategic leverage for great powers."
+        }
+      ]
+    }
+  ],
+  "initialMetrics": {
+    "political": 50,
+    "economic": 50,
+    "social": 50,
+    "technical": 50,
+    "sovereign": 50
+  },
+  "timeline": [
+    {
+      "year": 2026,
+      "eraTitle": "The Supply-Side Compute Crunch",
+      "briefing": "Hyperscalers pressure the UK to accept foreign compute terms.",
+      "defaultPath": "The UK must decide whether to build sovereign public clusters or accept foreign dependency.",
+      "options": [
+        {
+          "id": "2026_A",
+          "label": "Accept hyperscaler terms",
+          "summary": "Rapid compute growth, high short-term economic gain.",
+          "consequences": "High dependency on foreign stacks.",
+          "metrics": { "political": -5, "economic": 15, "social": -10, "technical": 25, "sovereign": -15 },
+          "log": "Accepted hyperscaler terms, increasing compute but weakening sovereignty."
+        },
+        {
+          "id": "2026_B",
+          "label": "Launch sovereign grid initiative",
+          "summary": "State-backed clusters prioritise public control.",
+          "consequences": "Slower deployment but stronger sovereignty."
+          ,"metrics": { "political": 10, "economic": -5, "social": 5, "technical": 10, "sovereign": 20 },
+          "log": "Launched sovereign grid initiative and public compute clusters."
+        }
+      ]
+    },
+    {
+      "year": 2027,
+      "eraTitle": "The Anchor Customer Dilemma",
+      "briefing": "The public sector must decide whether to buy domestic or foreign AI systems.",
+      "defaultPath": "Public procurement can either strengthen UK startups or destroy them.",
+      "options": [
+        {
+          "id": "2027_A",
+          "label": "Default to US enterprise APIs",
+          "summary": "Fast procurement, weaker domestic innovation.",
+          "consequences": "Public money strengthens foreign firms.",
+          "metrics": { "political": -5, "economic": 20, "social": -20, "technical": 10, "sovereign": -10 },
+          "log": "Procured US APIs for public services."
+        },
+        {
+          "id": "2027_B",
+          "label": "Mandate UK anchor procurement",
+          "summary": "Public contracts support local startups.",
+          "consequences": "More resilient domestic ecosystem.",
+          "metrics": { "political": 10, "economic": 5, "social": 15, "technical": -5, "sovereign": 15 },
+          "log": "Passed anchor procurement rules for UK builders."
+        }
+      ]
+    }
+  ],
+  "outcomeArchetypes": [
+    {
+      "id": "FORTRESS",
+      "title": "The Sovereign Tech-Fortress",
+      "grade": "Grade A",
+      "desc": "The UK secures strong autonomy and public compute infrastructure."
+    },
+    {
+      "id": "BROKER",
+      "title": "The Middle-Power Broker",
+      "grade": "Grade B",
+      "desc": "The UK becomes a strategic broker among allied states."
+    },
+    {
+      "id": "VASSAL",
+      "title": "The Anglo-American Protectorate",
+      "grade": "Grade C",
+      "desc": "The UK remains heavily dependent on foreign systems."
+    },
+    {
+      "id": "GILDED",
+      "title": "The Hyper-Capital Gilded Island",
+      "grade": "Grade D",
+      "desc": "Economic growth rises while social cohesion weakens."
+    },
+    {
+      "id": "HERMIT",
+      "title": "The Sidelined Hermit Kingdom",
+      "grade": "Grade F",
+      "desc": "The UK falls behind in both compute and innovation."
+    },
+    {
+      "id": "PRAGMATIC",
+      "title": "The Pragmatic Compromise State",
+      "grade": "Grade C+",
+      "desc": "The UK survives through compromise and incremental change."
+    }
+  ]
+}

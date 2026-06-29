@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UK Sovereign Dashboards</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 2rem;
+        line-height: 1.5;
+        color: #0f172a;
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+      }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .hero {
+        background: #0f172a;
+        color: white;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        margin-bottom: 1rem;
+      }
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .controls {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+      }
+      button, .upload-btn {
+        border: none;
+        border-radius: 999px;
+        padding: 0.6rem 1rem;
+        background: #2563eb;
+        color: white;
+        cursor: pointer;
+      }
+      button.active {
+        background: #1d4ed8;
+      }
+      .card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+        margin-bottom: 1rem;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+      }
+      .metric {
+        font-size: 1.6rem;
+        font-weight: bold;
+        margin-top: 0.25rem;
+      }
+      .muted {
+        color: #64748b;
+        font-size: 0.95rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th, td {
+        text-align: left;
+        padding: 0.65rem;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      th {
+        background: #f8fafc;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      .upload-label {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 0.6rem 1rem;
+        background: #16a34a;
+        color: white;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="hero">
+        <div class="toolbar">
+          <div>
+            <h1 id="title">UK Sovereign Dashboards</h1>
+            <p id="subtitle">Load your JSON file to begin.</p>
+          </div>
+          <div class="toolbar">
+            <label class="upload-label" for="json-upload">Upload JSON</label>
+            <input id="json-upload" type="file" accept="application/json" />
+            <button id="refresh-btn">Reload project file</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button data-view="summary" class="active">Summary</button>
+        <button data-view="table">Table</button>
+        <button data-view="raw">Raw JSON</button>
+      </div>
+
+      <div id="status" class="card">Waiting for JSON data...</div>
+      <div id="content"></div>
+    </div>
+
+    <script>
+      const state = {
+        data: null,
+        view: 'summary'
+      };
+
+      function toTitleCase(value) {
+        return String(value)
+          .replace(/([a-z])([A-Z])/g, '$1 $2')
+          .replace(/[_-]+/g, ' ')
+          .replace(/\b\w/g, (char) => char.toUpperCase());
+      }
+
+      function renderSummary(data) {
+        const cards = [];
+
+        if (Array.isArray(data)) {
+          cards.push({ label: 'Items', value: data.length });
+          if (data[0] && typeof data[0] === 'object') {
+            cards.push({ label: 'Columns', value: Object.keys(data[0]).length });
+          }
+        } else if (data && typeof data === 'object') {
+          cards.push({ label: 'Keys', value: Object.keys(data).length });
+          const values = Object.values(data).filter((value) => Array.isArray(value));
+          cards.push({ label: 'Lists', value: values.length });
+        } else {
+          cards.push({ label: 'Value', value: String(data) });
+        }
+
+        return `
+          <div class="grid">
+            ${cards.map((card) => `
+              <div class="card">
+                <div class="muted">${card.label}</div>
+                <div class="metric">${card.value}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      function renderTable(data) {
+        if (Array.isArray(data)) {
+          if (!data.length) return '<div class="card">No rows available.</div>';
+          const rows = data.slice(0, 20);
+          const columns = Object.keys(rows[0] && typeof rows[0] === 'object' ? rows[0] : {});
+          return `
+            <div class="card">
+              <table>
+                <thead><tr>${columns.map((col) => `<th>${toTitleCase(col)}</th>`).join('')}</tr></thead>
+                <tbody>
+                  ${rows.map((row) => `<tr>${columns.map((col) => `<td>${row[col] ?? ''}</td>`).join('')}</tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        if (data && typeof data === 'object') {
+          const entries = Object.entries(data);
+          return `
+            <div class="card">
+              <table>
+                <thead><tr><th>Field</th><th>Value</th></tr></thead>
+                <tbody>
+                  ${entries.map(([key, value]) => `<tr><td>${toTitleCase(key)}</td><td>${typeof value === 'object' ? JSON.stringify(value) : String(value)}</td></tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        return '<div class="card">No table data available.</div>';
+      }
+
+      function renderRaw(data) {
+        return `<div class="card"><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+      }
+
+      function renderDashboard() {
+        const content = document.getElementById('content');
+        const title = document.getElementById('title');
+        const subtitle = document.getElementById('subtitle');
+        const status = document.getElementById('status');
+        const data = state.data;
+
+        if (!data) {
+          title.textContent = 'UK Sovereign Dashboards';
+          subtitle.textContent = 'Load your JSON file to begin.';
+          status.textContent = 'Waiting for JSON data...';
+          content.innerHTML = '<div class="card">Choose a local JSON file or load the project file.</div>';
+          return;
+        }
+
+        title.textContent = data.title || 'UK Sovereign Dashboards';
+        subtitle.textContent = `${data.theme || 'Interactive dashboard'} • ${data.updated || 'Loaded from JSON'}`;
+        status.textContent = 'JSON loaded successfully';
+
+        if (state.view === 'table') {
+          content.innerHTML = renderTable(data);
+        } else if (state.view === 'raw') {
+          content.innerHTML = renderRaw(data);
+        } else {
+          content.innerHTML = renderSummary(data);
+        }
+      }
+
+      async function loadProjectFile() {
+        const status = document.getElementById('status');
+        status.textContent = 'Loading project JSON file...';
+        try {
+          const response = await fetch('./whitehall_sandbox_strategic_data.json?' + Date.now());
+          if (!response.ok) throw new Error('missing');
+          const data = await response.json();
+          state.data = data;
+          renderDashboard();
+        } catch (error) {
+          status.textContent = 'No project JSON file found yet. Upload one from your computer.';
+        }
+      }
+
+      function handleFileUpload(file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            state.data = JSON.parse(event.target.result);
+            renderDashboard();
+          } catch (error) {
+            alert('That file is not valid JSON.');
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      document.getElementById('refresh-btn').addEventListener('click', loadProjectFile);
+      document.getElementById('json-upload').addEventListener('change', (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (file) handleFileUpload(file);
+      });
+      document.querySelectorAll('[data-view]').forEach((button) => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('[data-view]').forEach((item) => item.classList.remove('active'));
+          button.classList.add('active');
+          state.view = button.getAttribute('data-view');
+          renderDashboard();
+        });
+      });
+
+      loadProjectFile();
+    </script>
+  </body>
+</html>
