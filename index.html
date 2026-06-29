@@ -24,6 +24,30 @@
         border-radius: 1rem;
         margin-bottom: 1rem;
       }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .controls {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+      }
+      button {
+        border: none;
+        border-radius: 999px;
+        padding: 0.6rem 1rem;
+        background: #2563eb;
+        color: white;
+        cursor: pointer;
+      }
+      button.active {
+        background: #1d4ed8;
+      }
       .grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -50,96 +74,128 @@
   <body>
     <div class="container">
       <div class="hero">
-        <h1 id="title">UK Sovereign Dashboards</h1>
-        <p id="subtitle">Loading your JSON data...</p>
+        <div class="topbar">
+          <div>
+            <h1 id="title">UK Sovereign Dashboards</h1>
+            <p id="subtitle">Loading your JSON data...</p>
+          </div>
+          <button id="refresh-btn">Reload data</button>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button data-view="summary" class="active">Summary</button>
+        <button data-view="metrics">Metrics</button>
+        <button data-view="notes">Notes</button>
       </div>
 
       <div id="status" class="card">Loading data...</div>
-      <div id="metrics" class="grid"></div>
-      <div id="notes" class="card"></div>
+      <div id="content"></div>
     </div>
 
-    <script id="dashboard-data" type="application/json">
-      {
-        "title": "UK Sovereign Dashboards",
-        "updated": "2026-06-29",
-        "theme": "Sovereignty and resilience",
-        "metrics": [
-          { "name": "Energy security", "value": 78, "unit": "%" },
-          { "name": "Food resilience", "value": 64, "unit": "%" },
-          { "name": "Digital independence", "value": 81, "unit": "%" }
-        ],
-        "notes": [
-          "This dashboard is now hosted on Vercel.",
-          "Replace the sample data with your real JSON export when ready."
-        ]
-      }
-    </script>
-
     <script>
-      const candidates = [
-        './whitehall_sandbox_strategic_data.json',
-        './data.json',
-        './public/whitehall_sandbox_strategic_data.json',
-        './public/data.json'
-      ];
+      const fallbackData = {
+        title: 'UK Sovereign Dashboards',
+        updated: '2026-06-29',
+        theme: 'Sovereignty and resilience',
+        metrics: [
+          { name: 'Energy security', value: 78, unit: '%' },
+          { name: 'Food resilience', value: 64, unit: '%' },
+          { name: 'Digital independence', value: 81, unit: '%' }
+        ],
+        notes: [
+          'This dashboard is now hosted on Vercel.',
+          'Replace the sample data with your real JSON export when ready.'
+        ]
+      };
 
-      function renderDashboard(data, elements) {
-        const { status, metrics, notes, title, subtitle } = elements;
+      const state = {
+        data: fallbackData,
+        view: 'summary'
+      };
+
+      function renderDashboard() {
+        const content = document.getElementById('content');
+        const title = document.getElementById('title');
+        const subtitle = document.getElementById('subtitle');
+        const status = document.getElementById('status');
+        const data = state.data || fallbackData;
 
         title.textContent = data.title || 'UK Sovereign Dashboards';
         subtitle.textContent = `${data.theme || 'Dashboard'} • Updated ${data.updated || 'n/a'}`;
         status.textContent = 'Dashboard ready';
 
-        metrics.innerHTML = '';
-        if (Array.isArray(data.metrics)) {
-          data.metrics.forEach((item) => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `<strong>${item.name || 'Metric'}</strong><div class="metric">${item.value ?? '--'}${item.unit || ''}</div>`;
-            metrics.appendChild(card);
-          });
+        if (state.view === 'metrics') {
+          content.innerHTML = `
+            <div class="grid">
+              ${Array.isArray(data.metrics) ? data.metrics.map((item) => `
+                <div class="card">
+                  <strong>${item.name || 'Metric'}</strong>
+                  <div class="metric">${item.value ?? '--'}${item.unit || ''}</div>
+                </div>
+              `).join('') : '<div class="card">No metrics available.</div>'}
+            </div>
+          `;
+          return;
         }
 
-        if (Array.isArray(data.notes) && data.notes.length) {
-          notes.innerHTML = `<strong>Notes</strong><ul class="notes">${data.notes.map((note) => `<li>${note}</li>`).join('')}</ul>`;
-        } else {
-          notes.innerHTML = '<strong>No notes available.</strong>';
+        if (state.view === 'notes') {
+          content.innerHTML = `
+            <div class="card">
+              <strong>Notes</strong>
+              <ul class="notes">
+                ${Array.isArray(data.notes) ? data.notes.map((note) => `<li>${note}</li>`).join('') : '<li>No notes available.</li>'}
+              </ul>
+            </div>
+          `;
+          return;
         }
+
+        content.innerHTML = `
+          <div class="grid">
+            <div class="card">
+              <strong>Theme</strong>
+              <div class="metric">${data.theme || 'Dashboard'}</div>
+            </div>
+            <div class="card">
+              <strong>Updated</strong>
+              <div class="metric">${data.updated || 'n/a'}</div>
+            </div>
+            <div class="card">
+              <strong>Metrics</strong>
+              <div class="metric">${Array.isArray(data.metrics) ? data.metrics.length : 0}</div>
+            </div>
+          </div>
+        `;
       }
 
       async function loadData() {
         const status = document.getElementById('status');
-        const metrics = document.getElementById('metrics');
-        const notes = document.getElementById('notes');
-        const title = document.getElementById('title');
-        const subtitle = document.getElementById('subtitle');
+        status.textContent = 'Loading data...';
 
         try {
-          const inlineRaw = document.getElementById('dashboard-data').textContent;
-          const inlineData = JSON.parse(inlineRaw);
-          renderDashboard(inlineData, { status, metrics, notes, title, subtitle });
-          return;
+          const response = await fetch('./whitehall_sandbox_strategic_data.json?' + Date.now());
+          if (!response.ok) throw new Error('missing file');
+          const data = await response.json();
+          state.data = data;
+          status.textContent = 'Loaded from whitehall_sandbox_strategic_data.json';
         } catch (error) {
-          // Fall back to loading the JSON file if present.
+          state.data = fallbackData;
+          status.textContent = 'Loaded fallback sample data';
         }
 
-        for (const path of candidates) {
-          try {
-            const response = await fetch(path);
-            if (!response.ok) continue;
-            const data = await response.json();
-            renderDashboard(data, { status, metrics, notes, title, subtitle });
-            return;
-          } catch (error) {
-            // Try the next candidate.
-          }
-        }
-
-        status.textContent = 'No JSON file was found yet.';
-        metrics.innerHTML = '';
-        notes.innerHTML = '<strong>Place your JSON file in the project root as whitehall_sandbox_strategic_data.json and refresh this page.</strong>';
+        renderDashboard();
       }
+
+      document.getElementById('refresh-btn').addEventListener('click', () => loadData());
+      document.querySelectorAll('[data-view]').forEach((button) => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('[data-view]').forEach((item) => item.classList.remove('active'));
+          button.classList.add('active');
+          state.view = button.getAttribute('data-view');
+          renderDashboard();
+        });
+      });
 
       loadData();
     </script>
